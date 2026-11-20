@@ -1,34 +1,22 @@
 from __future__ import annotations
 
-import asyncio
 from calendar import timegm
-from contextlib import suppress
-from datetime import datetime
+from datetime import datetime, timezone
 from inspect import isawaitable
-from typing import TYPE_CHECKING, Any, Optional, cast
+from typing import Any, Optional
 
-from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 from django.http import HttpRequest
 from django.utils.translation import gettext as _
 from graphql import GraphQLResolveInfo
 import jwt
-from packaging.version import parse as parse_ver
 from strawberry.annotation import StrawberryAnnotation  # type: ignore
-from strawberry.arguments import StrawberryArgument
 from strawberry.django.context import StrawberryDjangoContext
 from strawberry.types import Info
+from strawberry.types.arguments import StrawberryArgument
 
-from strawberry_django_jwt import exceptions, object_types, signals
-from strawberry_django_jwt.refresh_token.shortcuts import create_refresh_token
+from strawberry_django_jwt import exceptions, object_types
 from strawberry_django_jwt.settings import jwt_settings
-
-if TYPE_CHECKING:  # pragma: no cover
-    with suppress(ImportError):
-        from rest_framework.request import (
-            Request,  # Only used for type hinting when DRF is installed
-        )
 
 
 def create_strawberry_argument(python_name: str, graphql_name: str, type_: type[Any], **options):
@@ -51,7 +39,7 @@ def jwt_payload(user, _=None):
     if hasattr(username, "pk"):
         username = username.pk
 
-    exp = datetime.utcnow() + jwt_settings.JWT_EXPIRATION_DELTA
+    exp = datetime.now(timezone.utc) + jwt_settings.JWT_EXPIRATION_DELTA
 
     payload = {
         user.USERNAME_FIELD: username,
@@ -59,7 +47,7 @@ def jwt_payload(user, _=None):
     }
 
     if jwt_settings.JWT_ALLOW_REFRESH:
-        payload["origIat"] = timegm(datetime.utcnow().utctimetuple())
+        payload["origIat"] = timegm(datetime.now(timezone.utc).utctimetuple())
 
     if jwt_settings.JWT_AUDIENCE is not None:
         payload["aud"] = jwt_settings.JWT_AUDIENCE
@@ -71,14 +59,11 @@ def jwt_payload(user, _=None):
 
 
 def jwt_encode(payload: object_types.TokenPayloadType, _=None) -> str:
-    token = jwt.encode(
+    return jwt.encode(
         payload.__dict__,
         jwt_settings.JWT_PRIVATE_KEY or jwt_settings.JWT_SECRET_KEY,
         jwt_settings.JWT_ALGORITHM,
     )
-    if parse_ver(jwt.__version__) < parse_ver("2.0.0"):  # type: ignore
-        return cast(bytes, token).decode("utf8")
-    return cast(str, token)
 
 
 def jwt_decode(token: str, _=None) -> object_types.TokenPayloadType:
@@ -109,31 +94,8 @@ def get_http_authorization(context):
     return auth[1]
 
 
-def get_token_argument(_, **kwargs):
-    if jwt_settings.JWT_ALLOW_ARGUMENT:
-        input_fields = kwargs.get("input")
-
-        if isinstance(input_fields, dict):
-            kwargs = input_fields
-
-        return kwargs.get(jwt_settings.JWT_ARGUMENT_NAME)
-    return None
-
-
-# def get_token_argument(field_node, variable_values, **kwargs):
-#     if jwt_settings.JWT_ALLOW_ARGUMENT:
-#         if field_node.arguments is not None and len(field_node.arguments) > 0:
-#             for arg in field_node.arguments:
-#                 if arg.name.value == jwt_settings.JWT_ARGUMENT_NAME:
-#                     if 'value' not in arg.value.keys:
-#                         return variable_values.get(arg.value.name.value)
-#                     return arg.value.value
-#
-#     return None
-
-
 def get_credentials(request, **kwargs):
-    return get_token_argument(request, **kwargs) or get_http_authorization(request)
+    return get_http_authorization(request)
 
 
 def get_payload(token, context=None):
@@ -155,14 +117,6 @@ def get_user_by_natural_key(username):
         return None
 
 
-async def get_user_by_natural_key_async(username):
-    user_model = get_user_model()
-    try:
-        return await sync_to_async(user_model.objects.get_by_natural_key)(username)
-    except user_model.DoesNotExist:
-        return None
-
-
 def get_user_by_payload(payload):
     username = jwt_settings.JWT_PAYLOAD_GET_USERNAME_HANDLER(payload)
 
@@ -176,22 +130,9 @@ def get_user_by_payload(payload):
     return user
 
 
-async def get_user_by_payload_async(payload):
-    username = jwt_settings.JWT_PAYLOAD_GET_USERNAME_HANDLER(payload)
-
-    if not username:
-        raise exceptions.JSONWebTokenError(_("Invalid payload"))
-
-    user = await jwt_settings.JWT_ASYNC_GET_USER_BY_NATURAL_KEY_HANDLER(username)
-
-    if user is not None and not getattr(user, "is_active", True):
-        raise exceptions.JSONWebTokenError(_("User is disabled"))
-    return user
-
-
 def refresh_has_expired(orig_iat, _=None):
     exp = orig_iat + jwt_settings.JWT_REFRESH_EXPIRATION_DELTA.total_seconds()
-    return timegm(datetime.utcnow().utctimetuple()) > exp
+    return timegm(datetime.now(timezone.utc).utctimetuple()) > exp
 
 
 def set_cookie(response, key, value, expires):
@@ -234,28 +175,10 @@ def maybe_thenable(obj, on_resolve):
     return on_resolve(obj)
 
 
-def get_context(info: HttpRequest | Request | Info[Any, Any] | GraphQLResolveInfo) -> Any:
+def get_context(info: HttpRequest | Info[Any, Any] | GraphQLResolveInfo) -> Any:
     if hasattr(info, "context"):
         ctx = getattr(info, "context")  # noqa: B009
         if isinstance(ctx, StrawberryDjangoContext):
             return ctx.request
         return ctx
     return info
-
-
-async def create_user_token(user: User) -> object_types.TokenDataType:
-    token: object_types.TokenPayloadType = jwt_settings.JWT_PAYLOAD_HANDLER(user)
-    token_object = object_types.TokenDataType(payload=token, token=jwt_settings.JWT_ENCODE_HANDLER(token))
-    if jwt_settings.JWT_ALLOW_REFRESH:
-        token_object.refresh_expires_in = token.exp - int(datetime.now().timestamp())
-    if jwt_settings.JWT_LONG_RUNNING_REFRESH_TOKEN:
-        refresh_token = (  # type: ignore
-            (await sync_to_async(create_refresh_token)(user)) if asyncio.get_event_loop().is_running() else create_refresh_token(user)
-        )
-        token_object.refresh_expires_in = (
-            refresh_token.created.timestamp() + jwt_settings.JWT_REFRESH_EXPIRATION_DELTA.total_seconds() - int(datetime.now().timestamp())
-        )
-        token_object.refresh_token = refresh_token.get_token()
-
-    signals.token_issued.send(sender=create_user_token, request=None, user=user)
-    return token_object

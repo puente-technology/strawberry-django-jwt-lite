@@ -23,7 +23,7 @@ class SettingsTests(TestCase):
 
         self.assertTrue(settings.jwt_settings._cached_attrs)
 
-        delattr(settings.jwt_settings, "_user_settings")
+        del settings.jwt_settings._user_settings
         settings.jwt_settings.reload()
 
         self.assertFalse(settings.jwt_settings._cached_attrs)

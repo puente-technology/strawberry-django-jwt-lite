@@ -1,7 +1,6 @@
 from datetime import timedelta
 from functools import wraps
 import importlib
-from importlib import reload
 from types import ModuleType
 from unittest import mock
 
@@ -12,9 +11,8 @@ from strawberry_django_jwt import exceptions, utils
 import strawberry_django_jwt.object_types
 from strawberry_django_jwt.object_types import TokenPayloadType
 from strawberry_django_jwt.settings import jwt_settings
-from strawberry_django_jwt.shortcuts import get_user_by_token_async
 from tests.decorators import OverrideJwtSettings
-from tests.testcases import AsyncTestCase, TestCase
+from tests.testcases import TestCase
 
 
 def reload_import(imp: ModuleType):
@@ -107,39 +105,6 @@ class GetHTTPAuthorizationHeaderTests(TestCase):
         self.assertEqual(authorization_cookie, self.token)
 
 
-class GetCredentialsTests(TestCase):
-    @OverrideJwtSettings(JWT_ALLOW_ARGUMENT=True)
-    def test_argument_allowed(self):
-        kwargs = {
-            jwt_settings.JWT_ARGUMENT_NAME: self.token,
-        }
-
-        request = self.request_factory.get("/")
-        credentials = utils.get_credentials(request, **kwargs)
-
-        self.assertEqual(credentials, self.token)
-
-    @OverrideJwtSettings(JWT_ALLOW_ARGUMENT=True)
-    def test_input_argument(self):
-        kwargs = {
-            "input": {
-                jwt_settings.JWT_ARGUMENT_NAME: self.token,
-            },
-        }
-
-        request = self.request_factory.get("/")
-        credentials = utils.get_credentials(request, **kwargs)
-
-        self.assertEqual(credentials, self.token)
-
-    @OverrideJwtSettings(JWT_ALLOW_ARGUMENT=True)
-    def test_missing_argument(self):
-        request = self.request_factory.get("/")
-        credentials = utils.get_credentials(request)
-
-        self.assertIsNone(credentials)
-
-
 class GetPayloadTests(TestCase):
     @OverrideJwtSettings(JWT_VERIFY_EXPIRATION=True, JWT_EXPIRATION_DELTA=timedelta(seconds=-1))
     def test_expired_signature(self):
@@ -182,44 +147,3 @@ class GetUserByPayloadTests(TestCase):
 
         with self.assertRaises(exceptions.JSONWebTokenError):
             utils.get_user_by_payload(payload)
-
-
-class GetUserByNaturalKeyTestsAsync(AsyncTestCase):
-    async def test_user_does_not_exists_async(self):
-        user = await utils.get_user_by_natural_key_async(0)
-        self.assertIsNone(user)
-
-
-class GetUserByPayloadTestsAsync(AsyncTestCase):
-    async def test_user_by_invalid_payload_async(self):
-        with self.assertRaises(exceptions.JSONWebTokenError):
-            await utils.get_user_by_payload_async(TokenPayloadType())
-
-    async def test_user_disabled_by_payload_async(self):
-        payload = utils.jwt_payload(self.user)
-
-        with mock.patch(
-            "django.contrib.auth.models.User.is_active",
-            new_callable=mock.PropertyMock,
-            return_value=False,
-        ), self.assertRaises(exceptions.JSONWebTokenError):
-            await utils.get_user_by_payload_async(payload)
-
-
-class CreateUserTokenTestsAsync(AsyncTestCase):
-    @OverrideJwtSettings(JWT_LONG_RUNNING_REFRESH_TOKEN=False)
-    async def test_create_user_token_async(self):
-        reload(utils)
-        token = await utils.create_user_token(self.user)
-        user = await get_user_by_token_async(token.token)
-        assert user == self.user
-        assert token.refresh_token is None
-        assert token.refresh_expires_in - jwt_settings.JWT_EXPIRATION_DELTA.total_seconds() < 5
-
-    @OverrideJwtSettings(JWT_LONG_RUNNING_REFRESH_TOKEN=True)
-    async def test_create_user_token_with_refresh_async(self):
-        token = await utils.create_user_token(self.user)
-        user = await get_user_by_token_async(token.token)
-        assert user == self.user
-        assert token.refresh_token is not None
-        assert token.refresh_expires_in - jwt_settings.JWT_REFRESH_EXPIRATION_DELTA.total_seconds() < 5
