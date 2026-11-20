@@ -44,6 +44,8 @@ testpaths = [
     "tests",
 ]
 DJANGO_SETTINGS_MODULE = "tests.example_app.settings"
+# Make the test project importable when the package isn't installed in editable mode (e.g. in CI)
+pythonpath = ["."]
 python_files = "tests.py test_*.py *_tests.py"
 filterwarnings = []
 
