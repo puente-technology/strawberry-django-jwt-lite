@@ -1,5 +1,5 @@
 from calendar import timegm
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import wraps
 import inspect
 
@@ -30,7 +30,7 @@ def refresh_expiration(f):
     def wrapper(cls, *args, **kwargs):
         def on_resolve(payload):
             if jwt_settings.JWT_ALLOW_REFRESH:
-                payload.refresh_expires_in = timegm(datetime.utcnow().utctimetuple()) + jwt_settings.JWT_REFRESH_EXPIRATION_DELTA.total_seconds()
+                payload.refresh_expires_in = timegm(datetime.now(timezone.utc).utctimetuple()) + jwt_settings.JWT_REFRESH_EXPIRATION_DELTA.total_seconds()
             return payload
 
         result = f(cls, *args, **kwargs)
@@ -76,7 +76,7 @@ def jwt_cookie(view_func):
 
     def finish_response_sync(request, response):
         if hasattr(request, "jwt_token"):
-            expires = datetime.utcnow() + jwt_settings.JWT_EXPIRATION_DELTA
+            expires = datetime.now(timezone.utc) + jwt_settings.JWT_EXPIRATION_DELTA
 
             set_cookie(
                 response,
