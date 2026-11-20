@@ -1,7 +1,7 @@
-from typing import Any, Dict, Optional, Tuple, Type, TypeVar
+from typing import Any, Dict, Tuple, Type, TypeVar
 
 from django.contrib.auth import get_user_model
-import strawberry.django
+import strawberry
 
 from strawberry_django_jwt.settings import jwt_settings
 
@@ -16,11 +16,6 @@ def inject_fields(fields: Dict[str, Tuple[Type[X], X]]):
         return cls
 
     return inject
-
-
-@strawberry.type
-class DeleteType:
-    deleted: bool
 
 
 @strawberry.type
@@ -40,11 +35,3 @@ class TokenPayloadType:
 @strawberry.type
 class PayloadType:
     payload: TokenPayloadType
-
-
-@strawberry.type
-class TokenDataType:
-    payload: TokenPayloadType
-    token: str = ""
-    refresh_token: Optional[str] = None
-    refresh_expires_in: Optional[int] = None
