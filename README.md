@@ -1,6 +1,6 @@
 # Strawberry Django JWT
 
-*This project will no longer be updated. Feel free to fork the code or refer to other libraries such as [strawberry-django-auth](https://github.com/nrbnlulu/strawberry-django-auth)*
+_This project will no longer be updated. Feel free to fork the code or refer to other libraries such as [strawberry-django-auth](https://github.com/nrbnlulu/strawberry-django-auth)_
 
 ---
 

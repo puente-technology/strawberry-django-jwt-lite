@@ -1,5 +1,5 @@
 import inspect
-from typing import Any, Dict, Optional
+from typing import Any
 
 from django.utils.translation import gettext as _
 import strawberry
@@ -28,9 +28,9 @@ from strawberry_django_jwt.utils import (
 
 class BaseJSONWebTokenMixin:
     @staticmethod
-    def init_fields(cls, field_options: Dict[str, Dict[str, Any]]):
+    def init_fields(cls, field_options: dict[str, dict[str, Any]]):
         if not settings.jwt_settings.JWT_HIDE_TOKEN_FIELDS:
-            for (__, field) in inspect.getmembers(cls, lambda f: isinstance(f, StrawberryField)):
+            for __, field in inspect.getmembers(cls, lambda f: isinstance(f, StrawberryField)):
                 field.arguments.append(create_strawberry_argument("token", "token", str, **field_options.get("token", {})))
                 if settings.jwt_settings.JWT_LONG_RUNNING_REFRESH_TOKEN:
                     field.arguments.append(create_strawberry_argument("refresh_token", "refreshToken", str, **field_options.get("refresh_token", {})))
@@ -50,7 +50,7 @@ class RefreshTokenMixin(JSONWebTokenMixin):
     @csrf_rotation
     @refresh_expiration
     @ensure_refresh_token
-    def _refresh(self, info: Info, refresh_token: Optional[str]) -> RefreshedTokenType:
+    def _refresh(self, info: Info, refresh_token: str | None) -> RefreshedTokenType:
         context = get_context(info)
         old_refresh_token = get_refresh_token(refresh_token, context)
 
@@ -83,7 +83,7 @@ class RefreshTokenMixin(JSONWebTokenMixin):
         )
         return RefreshedTokenType(payload=payload, token=token, refresh_token=new_refresh_token, refresh_expires_in=0)
 
-    def refresh(self, info: Info, refresh_token: Optional[str] = None) -> RefreshedTokenType:
+    def refresh(self, info: Info, refresh_token: str | None = None) -> RefreshedTokenType:
         return RefreshTokenMixin._refresh(self, info=info, refresh_token=refresh_token)
 
 

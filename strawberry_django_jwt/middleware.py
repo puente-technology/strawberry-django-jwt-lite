@@ -1,4 +1,4 @@
-from typing import Any, Optional, Set, cast
+from typing import Any, cast
 
 from django.contrib.auth import authenticate
 from django.utils.translation import gettext as _
@@ -25,7 +25,7 @@ def allow_any(info, **kwargs):
     field_type = getattr(field.type, "of_type", None)
 
     return field_type is not None and any(
-        [issubclass(class_type, GraphQLType) and isinstance(field_type, class_type) for class_type in tuple(jwt_settings.JWT_ALLOW_ANY_CLASSES)]
+        issubclass(class_type, GraphQLType) and isinstance(field_type, class_type) for class_type in tuple(jwt_settings.JWT_ALLOW_ANY_CLASSES)
     )
 
 
@@ -35,9 +35,9 @@ def _authenticate(request):
 
 
 class BaseJSONWebTokenMiddleware(SchemaExtension):
-    def __init__(self, *, execution_context: Optional[ExecutionContext] = None):
+    def __init__(self, *, execution_context: ExecutionContext | None = None):
         super().__init__(execution_context=execution_context)
-        self.cached_allow_any: Set[Any] = set()
+        self.cached_allow_any: set[Any] = set()
 
     def authenticate_context(self, info: GraphQLResolveInfo, **kwargs):
         root_path = info.path[0]

@@ -111,7 +111,7 @@ class JWTSettings:
         self._cached_attrs.clear()
 
         if hasattr(self, "_user_settings"):
-            delattr(self, "_user_settings")
+            del self._user_settings
 
 
 def reload_settings(*args, **kwargs):

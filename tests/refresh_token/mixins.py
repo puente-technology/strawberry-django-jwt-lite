@@ -23,7 +23,7 @@ class RefreshTokenMutationMixin:
         m = type(
             "jwt",
             (object,),
-            {**{name: mutation for name, mutation in self.refresh_token_mutations.items()}},
+            {**{**self.refresh_token_mutations}},
         )
         self.Mutation = strawberry.type(m)
 
@@ -50,7 +50,7 @@ class RefreshMixin(RefreshTokenMutationMixin, RefreshTokenMixin):
         m = type(
             "jwt",
             (object,),
-            {**{name: mutation for name, mutation in self.refresh_token_mutations.items()}},
+            {**{**self.refresh_token_mutations}},
         )
         self.Mutation = strawberry.type(m)
         self.client.schema(query=self.Query, mutation=self.Mutation)
@@ -87,7 +87,7 @@ class RefreshMixin(RefreshTokenMutationMixin, RefreshTokenMixin):
         m = type(
             "jwt",
             (object,),
-            {**{name: mutation for name, mutation in self.refresh_token_mutations.items()}},
+            {**{**self.refresh_token_mutations}},
         )
         self.Mutation = strawberry.type(m)
         self.client.schema(query=self.Query, mutation=self.Mutation)
@@ -120,7 +120,7 @@ class RefreshMixin(RefreshTokenMutationMixin, RefreshTokenMixin):
         m = type(
             "jwt",
             (object,),
-            {**{name: mutation for name, mutation in self.refresh_token_mutations.items()}},
+            {**{**self.refresh_token_mutations}},
         )
         self.Mutation = strawberry.type(m)
         self.client.schema(query=self.Query, mutation=self.Mutation)
@@ -137,7 +137,7 @@ class RefreshMixin(RefreshTokenMutationMixin, RefreshTokenMixin):
         m = type(
             "jwt",
             (object,),
-            {**{name: mutation for name, mutation in self.refresh_token_mutations.items()}},
+            {**{**self.refresh_token_mutations}},
         )
         self.Mutation = strawberry.type(m)
         self.client.schema(query=self.Query, mutation=self.Mutation)
@@ -179,7 +179,7 @@ class CookieRefreshMixin(RefreshTokenMutationMixin):
         m = type(
             "jwt",
             (object,),
-            {**{name: mutation for name, mutation in self.refresh_token_mutations.items()}},
+            {**{**self.refresh_token_mutations}},
         )
         self.Mutation = strawberry.type(m)
         self.client.schema(query=self.Query, mutation=self.Mutation)

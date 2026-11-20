@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple, Type, TypeVar
+from typing import Any, TypeVar
 
 from django.contrib.auth import get_user_model
 import strawberry
@@ -8,7 +8,7 @@ from strawberry_django_jwt.settings import jwt_settings
 X = TypeVar("X", Any, Any)
 
 
-def inject_fields(fields: Dict[str, Tuple[Type[X], X]]):
+def inject_fields(fields: dict[str, tuple[type[X], X]]):
     def inject(cls):
         for field, data in fields.items():
             setattr(cls, field, data[1])
