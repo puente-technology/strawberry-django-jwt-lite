@@ -34,7 +34,11 @@ jobs:
           # The versions the Puente boilerplate currently pins
           - name: boilerplate versions
             pins: "django==4.2.30 strawberry-graphql==0.327.7 graphql-core==3.2.3 pyjwt==2.15.1"
-          # The newest versions allowed by pyproject.toml
+          - name: Django 5.2 LTS
+            pins: "django~=5.2.0"
+          - name: Django 6.0
+            pins: "django~=6.0.0"
+          # The newest versions allowed by pyproject.toml (currently Django 6.1)
           - name: latest allowed
             pins: ""
     steps:

@@ -40,7 +40,7 @@ dependency, as long as they use the features listed below.
 ## Requirements
 
 - Python 3.10+
-- Django 4.2
+- Django 4.2 to 6.1 (tested with 4.2, 5.2, 6.0 and 6.1; Django 6 needs Python 3.12+)
 - strawberry-graphql 0.327.7+
 - PyJWT 2.x
 
