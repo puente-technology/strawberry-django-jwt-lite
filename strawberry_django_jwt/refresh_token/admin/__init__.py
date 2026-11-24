@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from django_admin_display import admin_display
 
 from strawberry_django_jwt.refresh_token import models
 from strawberry_django_jwt.refresh_token.admin import filters
@@ -15,10 +14,10 @@ class RefreshTokenAdmin(admin.ModelAdmin):
     search_fields = ("token",)
     actions = ("revoke",)
 
-    @admin_display(short_description=_("Revoke selected %(verbose_name_plural)s"))
+    @admin.action(description=_("Revoke selected %(verbose_name_plural)s"))
     def revoke(self, request, queryset):
         queryset.update(revoked=timezone.now())
 
-    @admin_display(short_description=_("is expired"), boolean=True)
+    @admin.display(description=_("is expired"), boolean=True)
     def is_expired(self, obj):
         return obj.is_expired()

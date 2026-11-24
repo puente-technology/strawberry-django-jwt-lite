@@ -1,4 +1,3 @@
-from asgiref.sync import sync_to_async
 from django.utils.functional import lazy
 from django.utils.translation import gettext as _
 
@@ -33,11 +32,3 @@ refresh_token_lazy = lazy(
     lambda user, refresh_token=None: create_refresh_token(user, refresh_token).get_token(),
     str,
 )
-
-
-async def create_token_lazy_async(user, refresh_token=None):
-    res = await sync_to_async(create_refresh_token)(user, refresh_token)
-    return res.get_token()
-
-
-refresh_token_lazy_async = create_token_lazy_async
