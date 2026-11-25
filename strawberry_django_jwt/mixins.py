@@ -4,7 +4,6 @@ from typing import Any
 from django.utils.translation import gettext as _
 import strawberry
 from strawberry.types import Info
-from strawberry.types.field import StrawberryField
 
 from strawberry_django_jwt import exceptions, settings
 from strawberry_django_jwt.decorators import (
@@ -24,6 +23,13 @@ from strawberry_django_jwt.utils import (
     create_strawberry_argument,
     get_context,
 )
+
+try:
+    from strawberry.types.field import StrawberryField
+except ImportError:  # older strawberry-graphql (e.g. 0.215)
+    from strawberry.field import (  # type: ignore[import-not-found,no-redef]
+        StrawberryField,
+    )
 
 
 class BaseJSONWebTokenMixin:

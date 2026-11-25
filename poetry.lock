@@ -1757,4 +1757,4 @@ dev = ["uvicorn"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4"
-content-hash = "8a8b15e1ead1797c082e948b1e83e280b509f0e0bd28ec9207eaf0d4961b1386"
+content-hash = "1afaad3d524826a2d27423ac89adbf1dda96c14a7e19996aa2b55ce3335073d9"

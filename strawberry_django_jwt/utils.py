@@ -13,10 +13,16 @@ import jwt
 from strawberry.annotation import StrawberryAnnotation  # type: ignore
 from strawberry.django.context import StrawberryDjangoContext
 from strawberry.types import Info
-from strawberry.types.arguments import StrawberryArgument
 
 from strawberry_django_jwt import exceptions, object_types
 from strawberry_django_jwt.settings import jwt_settings
+
+try:
+    from strawberry.types.arguments import StrawberryArgument
+except ImportError:  # older strawberry-graphql (e.g. 0.215)
+    from strawberry.arguments import (  # type: ignore[import-not-found,no-redef]
+        StrawberryArgument,
+    )
 
 
 def create_strawberry_argument(python_name: str, graphql_name: str, type_: type[Any], **options):

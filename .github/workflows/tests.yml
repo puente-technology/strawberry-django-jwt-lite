@@ -31,20 +31,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # The versions the Puente boilerplate currently pins
-          - name: boilerplate versions
+          # The oldest supported versions, as pinned by the Puente boilerplate
+          - name: Python 3.11, Strawberry 0.215
+            python: "3.11"
+            pins: "django==4.2.30 strawberry-graphql==0.215.1 graphql-core==3.2.3 pyjwt==2.15.1"
+          - name: Python 3.14, Strawberry 0.327
+            python: "3.14"
             pins: "django==4.2.30 strawberry-graphql==0.327.7 graphql-core==3.2.3 pyjwt==2.15.1"
           - name: Django 5.2 LTS
+            python: "3.14"
             pins: "django~=5.2.0"
           - name: Django 6.0
+            python: "3.14"
             pins: "django~=6.0.0"
           # The newest versions allowed by pyproject.toml (currently Django 6.1)
           - name: latest allowed
+            python: "3.14"
             pins: ""
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: ${{ matrix.python }}
       - run: pip install . cryptography "pytest>=9.2.0" "pytest-django>=4.14.0" ${{ matrix.pins }}
       - run: pytest

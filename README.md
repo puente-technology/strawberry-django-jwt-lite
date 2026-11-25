@@ -41,7 +41,7 @@ dependency, as long as they use the features listed below.
 
 - Python 3.10+
 - Django 4.2 to 6.1 (tested with 4.2, 5.2, 6.0 and 6.1; Django 6 needs Python 3.12+)
-- strawberry-graphql 0.327.7+
+- strawberry-graphql 0.215.1+
 - PyJWT 2.x
 
 ---
@@ -51,14 +51,14 @@ dependency, as long as they use the features listed below.
 1. Install from a git tag. With pip:
 
    ```shell
-   pip install "strawberry-django-jwt-lite @ git+https://github.com/puente-technology/strawberry-django-jwt-lite.git@v0.1.0"
+   pip install "strawberry-django-jwt-lite @ git+https://github.com/puente-technology/strawberry-django-jwt-lite.git@v0.1.1"
    ```
 
    or with Poetry:
 
    ```toml
    [tool.poetry.dependencies]
-   strawberry-django-jwt-lite = { git = "https://github.com/puente-technology/strawberry-django-jwt-lite.git", tag = "v0.1.0" }
+   strawberry-django-jwt-lite = { git = "https://github.com/puente-technology/strawberry-django-jwt-lite.git", tag = "v0.1.1" }
    ```
 
    Don't install it alongside the original `strawberry-django-jwt` package: both provide the `strawberry_django_jwt`
